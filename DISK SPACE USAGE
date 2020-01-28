@@ -1,0 +1,176 @@
+
+/*=====================================================================================
+	pgm:copy,move and del
+	Created by:xuser
+	description:utility pgm;
+	cp,mv and del and get disk space usage with powershell
+======================================================================================*/
+
+/*copy*/
+options noxwait xsync;
+x copy 
+	"&FILEPATH\*.zip" 			/*src*/
+	"&FILEPATH\Region";					/*trgt*/
+
+x move 
+	"&FILEPATH\mv.sas7*" 			/*src*/
+	"&FILEPAHT";		  			/*trgt*/
+
+x del 
+	"&FILEPATH\*.sas7*";			/*trgt*/
+
+
+
+/*usiing powershell*/
+
+/*	no macro*/
+options noxwait xsync;
+	x PowerShell copy "&FILEPATHFROM.\&dsn..sas7b*" 
+					"&FILEPAHTTO.";
+
+
+/*	macro*/
+options noxwait xsync;
+%macro ps(dsn);
+x PowerShell copy "&FILEPATHFROM.\&dsn..sas7b*" 
+					"&FILEPATHTO.";
+
+%mend;
+%ps(clm_2015);
+
+
+
+/*source**********************************************************************
+https://www.mssqltips.com/sqlservertip/2774/
+powershell-script-to-find-files-that-are-consuming-the-most-disk-space/
+********************************************************************************/
+/*working code-1*/
+%macro tst;
+x powershell 
+Get-ChildItem M:\user\test\Data -recurse | sort-Object -property name -Descending | Export-CSV -notypeinformation "T:\user\test\Datareport.csv"
+%mend tst;
+%tst;
+
+/*working code-2*/
+%macro tst2;
+	x powershell 
+	Get-ChildItem M:\user\test\Data -recurse | sort-Object -property name -Descending |
+	Export-CSV -notypeinformation "T:\user\test\Datareport2.csv"
+%mend tst;
+%tst2;
+
+
+/*working code-3*/
+/*testing if putting commands in multiple line works or not*/
+%macro tst4;
+	x powershell 
+	Get-ChildItem T:\user\test\Data -recurse |
+	sort-Object -property name -Descending |
+	Export-CSV -notypeinformation "T:\user\test\report.csv"
+%mend tst;
+%tst4;
+
+
+
+/*****************************************************************************/
+/*not working*/
+%macro this;
+	x powershell 
+	Get-ChildItem T:\user\test\Data -recurse |
+	Get-Object -property fullname,
+	Owner = (Get-Acl $_.Fullname).Owner |
+Export-Csv -nti "T:\user\test\report2.csv" 
+
+%mend;
+%this;
+/*working*/
+options noxwait xsync;
+%macro hilo;
+x dir /q /s T:\user\test\Data > T:\user\test\sayhi2.csv
+%mend;
+%hilo;
+/*working*/
+options noxwait xsync;
+%macro hilo;
+x dir /q/s/l T:\user\test\Data > T:\user\test\owners.html
+%mend;
+%hilo;
+/*working*/
+%macro runit;
+x powershell
+	robocopy T:\user\test\data\clm
+	T:\usertest
+%mend ;
+%runit;
+/*working no filter*/
+%macro runise;
+$path = "T:\user"
+Get-Childitem $path -Force -recurse | 
+Select fullname,length, Name,directory,
+@{Name="owner";Expression={(Get-Acl $_.Fullname).Owner}},
+CreationTime,LastAccesstime |
+Export-CSV -notypeinformation "T:\user\test\report3.csv"
+%mend runise;
+
+/*working with one filter dataset*/
+%macro wihtfilter;
+$path = "T:\user"
+Get-Childitem $path -include *.sas7* -Force -recurse | 
+Select fullname,length, Name,directory,
+@{Name="owner";Expression={(Get-Acl $_.Fullname).Owner}},
+CreationTime,LastAccesstime |
+Export-CSV -notypeinformation "T:\user\test\filter.csv"
+%mend withfiletr;
+
+/*working-with two filter dataset*/
+%macro twofiletr;
+$path = "T:\user"
+Get-Childitem $path -include *.sas7*,*.log* -Force -recurse | 
+Select fullname,length, Name,directory,
+@{Name="owner";Expression={(Get-Acl $_.Fullname).Owner}},
+CreationTime,LastAccesstime |
+Export-CSV -notypeinformation "T:\user\test\twofilter.csv"
+%mend twofilter;
+
+
+/*working-list the files older then x days*/
+/*working-get .sas7bdat and .zip files older then xx days*/
+%macro olderthen;
+$path = "T:\user"
+Get-Childitem $path -include *.sas7*,*.zip* -Force -recurse | 
+where{$_.LastAccessTime -lt (Get-Date).AddDays(-23)}|
+Select fullname,length,Name,directory,
+@{Name="owner";Expression={(Get-Acl $_.Fullname).Owner}},
+CreationTime,LastAccesstime |
+Export-CSV -notypeinformation "T:\user\test\twentythreeday_old.csv"
+%mend ;
+
+/*working-get all .zip files only that's still in Y:drive--zero days older-meaning get all
+zip files no matter how many days thay are older*/
+%macro getzipfiles;
+$path = "Y:\Medicare"
+Get-Childitem $path -include *.zip* -Force -recurse | 
+where{$_.LastAccessTime -lt (Get-Date).AddDays(-0)}|
+Select fullname,length,Name,directory,
+@{Name="owner";Expression={(Get-Acl $_.Fullname).Owner}},
+CreationTime,LastAccesstime |
+Export-CSV -notypeinformation "T:\user\test\list_zippedfiles.csv"
+%mend getzipfiles;
+
+/*
+creationTime=createtime
+LastAccesstime=someoneaccessedbut did not modify it
+LastWriteTime=last time it was modified
+*/
+/*working*/
+%macro addlastaccessdate;
+$path = "T:\user\test\Data\clm"
+Get-Childitem $path -include *.sas7*,*.zip* -Force -recurse | 
+where{$_.LastAccessTime -lt (Get-Date).AddDays(-0)}|
+Select fullname,length,Name,directory,
+@{Name="owner";Expression={(Get-Acl $_.Fullname).Owner}},
+CreationTime,LastAccesstime,LastWriteTime |
+Export-CSV -notypeinformation "T:\user\test\get_lst_access.csv"
+%mend;
+
+
