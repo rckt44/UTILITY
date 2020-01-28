@@ -1,0 +1,48 @@
+/***********option-1*****************/
+
+/*check dataset*/
+%macro files_needed;
+%global Required_Datasets;
+%if %sysfunc(exist(sashelp.Cars)) and 
+	%sysfunc(exist(sashelp.Class)) and 
+	%sysfunc(exist(sashelp.Bei)) and 
+	%sysfunc(exist(sashelp.Bei)) and 
+	%sysfunc(exist(sashelp.Bmt)) and 
+	%sysfunc(exist(sashelp.roma))/*no data called roma,so you will have 'N' as req dtaset*/ 
+
+%then %do;
+	%let Required_Datasets = Y;
+ %end;
+ %else %do;
+	%let Required_Datasets = N;
+  %end;
+%mend;
+%files_needed
+
+%put &Required_Datasets.;
+
+/************option-2************************/
+/*************************************************************************************
+    check if file or folder exists
+*************************************************************************************/
+/*for internal files*/
+%macro chk_file_xst(libref,table);
+	%if %sysfunc(exist(&libref..&table.)) %then %do;
+	...;
+	%end;
+	%else %do ; 
+	...;
+	%end;
+%mend chk_file_xst;
+%chk_file_xst(libref_1,table_1)
+
+/*for external files*/
+%macro check(dir ) ; 
+	%if %sysfunc(fileexist(&dir.)) %then %do; 
+	...; 
+	%end; 
+	%else %do ; 
+	...; 
+	%end ; 
+%mend ; 
+%check("drive_path\filename.ext")
