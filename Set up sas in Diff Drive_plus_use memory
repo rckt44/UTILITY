@@ -1,0 +1,6 @@
+/*fill the following in the Target:*/
+"E:\Program Files\SASHome\SASFoundation\9.4\sas.exe" -MEMSIZE 8G -sortsize 4g -work "H:\user\SASWORK" -utilloc "H:\user\SASWORK"
+
+
+/*fill the folliing in start in (#note:keep the start in as default,as it the location where sas application is stored)*/
+"E:\Program Files\SASHome\SASFoundation\9.4"
